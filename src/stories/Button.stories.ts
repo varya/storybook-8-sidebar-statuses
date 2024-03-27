@@ -11,7 +11,7 @@ const meta = {
     layout: "centered",
   },
   // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
-  tags: ["autodocs"],
+  tags: ["autodocs", "DEPRECATED"],
   // More on argTypes: https://storybook.js.org/docs/api/argtypes
   argTypes: {
     backgroundColor: { control: "color" },
@@ -29,14 +29,12 @@ export const Primary: Story = {
     primary: true,
     label: "Button",
   },
-  tags: ["deprecated"],
 };
 
 export const Secondary: Story = {
   args: {
     label: "Button",
   },
-  tags: ["experimental"],
 };
 
 export const Large: Story = {

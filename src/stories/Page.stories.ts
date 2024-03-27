@@ -6,6 +6,7 @@ import { Page } from './Page';
 const meta = {
   title: 'Example/Page',
   component: Page,
+  tags: ['NEW'],
   parameters: {
     // More on how to position stories at: https://storybook.js.org/docs/configure/story-layout
     layout: 'fullscreen',
