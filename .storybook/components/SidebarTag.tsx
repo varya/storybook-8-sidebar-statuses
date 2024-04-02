@@ -88,7 +88,7 @@ const mapper = (combo: Combo) => {
 }
 
 const isStatus = (value: string): value is STATUS => {
-  return Object.values(STATUS).includes(value as STATUS);
+  return STATUS[value] !== undefined;
 }
 
 const filterTags = (tags: string[] | undefined): string[] => {
