@@ -21,7 +21,7 @@
  * right from the Storybook UI. The full list of statuses, which can be found later in the code, includes NEW, BETA, and
  * DEPRECATED.
  * 
- * To display these tag badges after Storybook has loaded, the component fetches and reads the "index.json" file, extracting
+ * To display these tag badges after Storybook has loaded, the component gets data from Manager-API's Consumer and extracts
  * tag information for items with the type "docs" since tags for the type "component" are not available. If there is no tags
  * for the "docs" type, the component will search for any other item with the same id and tags that match the statuses.
  * This approach allows us to utilize corresponding documentation items to infer and display the relevant status tags for
@@ -29,7 +29,14 @@
  * tags.
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { Consumer } from '@storybook/manager-api';
+
+export enum STATUS {
+  DEPRECATED = 'DEPRECATED',
+  BETA = 'BETA',
+  NEW = 'NEW',
+};
 
 interface Item {
   type: string;
@@ -39,10 +46,14 @@ interface Item {
   children?: string[];
 }
 
-const STATUS = {
-  DEPRECATED: 'DEPRECATED',
-  BETA: 'BETA',
-  NEW: 'NEW',
+type Combo = any;
+
+type DataEntry = {
+  tags?: string[];
+}
+
+type DataMap = {
+  [key: string]: DataEntry;
 }
 
 const defaultTagsConfig = {
@@ -72,62 +83,60 @@ const defaultTagsConfig = {
   },
 }
 
-const SidebarTagComponent = ({ item }: { item: Item }) => {
-  const [tags, setTags] = useState<string[]>([]);
+const mapper = (combo: Combo) => {
+  return combo.state.index;
+}
 
-  useEffect(() => {
-    const fetchTags = async () => {
-      try {
-        const response = await fetch('index.json');
-        const data = await response.json();
+const isStatus = (value: string): value is STATUS => {
+  return Object.values(STATUS).includes(value as STATUS);
+}
 
-        let filteredTags = [];
-
-        // Initially try to find `--docs` and filter its tags
-        const docEntry = data.entries[`${item.id}--docs`];
-          if (docEntry && docEntry.tags) {
-            filteredTags = docEntry.tags.filter((tag: string) => Object.values(STATUS).includes(tag.toUpperCase()));
-        }
-
-        // If no matching tags from the STATUS list, search for any `${item.id}--*` with matching tags
-      if (filteredTags.length === 0) {
-        const entryKey = Object.keys(data.entries).find(key => 
-          key.startsWith(`${item.id}--`) && 
-          data.entries[key].tags &&
-          data.entries[key].tags.some((tag: string) => Object.values(STATUS).includes(tag.toUpperCase()))
-        );
-        
-        if (entryKey) {
-          const entry = data.entries[entryKey];
-          filteredTags = entry.tags.filter((tag: string) => Object.values(STATUS).includes(tag.toUpperCase()));
-        }
-      }
-
-      setTags(filteredTags);
-
-      } catch (error) {
-        console.error("Failed to fetch tags:", error);
-        setTags([]); // In case of an error, reset tags to an empty array
-      }
-    };
-
-    fetchTags();
-  }, [item.id]); // Dependency array to re-run the effect if item.id changes
-  
-  return (
-    <>
-      {tags.map((tag: string) => {
-          const style = defaultTagsConfig[tag.toUpperCase()].styles;
-          const title = defaultTagsConfig[tag.toUpperCase()].title;
-          return (
-              <span key={tag} style={{...style, marginLeft: 'auto', marginRight: '15px', borderRadius: '3px', padding: '2px 4px', display: 'inline-block'}}>
-                  {title}
-              </span>
-          );
-      })}
-    </>
-  );
+const filterTags = (tags: string[] | undefined): string[] => {
+  return tags?.filter(tag => isStatus(tag.toUpperCase())) || [];
 };
+
+const getTags = (data: DataMap, itemId: string): string[] => {
+
+  // Attempt to find and filter tags for `--docs` entry
+  let filteredTags = filterTags(data[`${itemId}--docs`]?.tags);
+
+  if (filteredTags.length === 0) {
+    // Find the first entry matching the criteria
+    const entry = Object.entries(data).find(([key, value]) =>
+      key.startsWith(`${itemId}--`) && filterTags(value.tags).length > 0
+    );
+
+    // Filter tags for the found entry
+    if (entry) {
+      filteredTags = filterTags(entry[1].tags);
+    }
+  }
+
+  return filteredTags;
+}
+
+const SidebarTagComponent = ({ item }: { item: Item }) => (
+  <Consumer filter={mapper}>
+    {(stories) => {
+      const tags = getTags(stories, item.id);
+      return tags.map((tag: string) => {
+        // Verify and assert that the tag is a key of `defaultTagsConfig`
+        const tagKey = tag.toUpperCase() as keyof typeof defaultTagsConfig;
+        if (!defaultTagsConfig[tagKey]) {
+          return null;
+        }
+
+        const style = defaultTagsConfig[tagKey].styles;
+        const title = defaultTagsConfig[tagKey].title;
+        return (
+          <span key={tag} style={{...style, marginLeft: 'auto', marginRight: '15px', borderRadius: '3px', padding: '2px 4px', display: 'inline-block'}}>
+              {title}
+          </span>
+        )
+      })
+    }}
+  </Consumer>
+)
 
 const SidebarTag =  ({ item }: { item: Item })=> {
 
@@ -138,6 +147,6 @@ const SidebarTag =  ({ item }: { item: Item })=> {
       return null;
   }
 
-};
+}
 
 export default SidebarTag;
