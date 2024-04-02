@@ -16,7 +16,7 @@ In versions 7 and 8 of Storybook, the direct access to component parameters with
 
 ## How It Works
 
-The `<SidebarTag>` component is crafted to work seamlessly within Storybook's sidebar. It operates by fetching the `index.json` file post-Storybook load, extracting tag information for items marked as "docs". This is because direct tag information for components is unavailable. In cases where tags for "docs" type are absent, the component searches for any item with matching IDs and tags that correspond with predefined statuses.
+The `<SidebarTag>` component is crafted to work seamlessly within Storybook's sidebar. It operates by getting data via API's Consumer and extracts tag information for items marked as "docs". This is because direct tag information for components is unavailable. In cases where tags for "docs" type are absent, the component searches for any item with matching IDs and tags that correspond with predefined statuses.
 
 Here's a brief guide on how to use it:
 
@@ -41,10 +41,11 @@ Here's a brief guide on how to use it:
 
 ## Known Limitations
 
-- Direct access to `tags` information for components is not possible, necessitating the use of the `index.json` for fetching this data.
-- Real-time fetching of tags for all stories in the sidebar is not feasible, leading to reliance on the statically generated `index.json`.
+- Direct access to `tags` information for components is not possible, so the tags are obtained from components' stories.
 - Fetching is performed for each component listed, potentially impacting performance for large story collections.
 
 ## Acknowledgments
 
 The initial setup for this repository was inspired by and adapted from https://github.com/shilman/storybook-tag-badges, aiming to extend its functionalities and address the specific challenges encountered with Storybook's newer versions.
+
+Special thanks to @Aracturat who [suggested how to improve the data fetch](https://github.com/varya/storybook-8-sidebar-statuses/issues/1).
