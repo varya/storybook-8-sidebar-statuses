@@ -88,27 +88,27 @@ const mapper = (combo: Combo) => {
 }
 
 const isStatus = (value: string): value is STATUS => {
-  return STATUS[value] !== undefined;
+  return STATUS[value.toUpperCase()] !== undefined;
 }
 
-const filterTags = (tags: string[] | undefined): string[] => {
-  return tags?.filter(tag => isStatus(tag.toUpperCase())) || [];
+const filterStatusTags = (tags: string[] | undefined): string[] => {
+  return tags?.filter(isStatus) || [];
 };
 
 const getTags = (data: DataMap, itemId: string): string[] => {
 
   // Attempt to find and filter tags for `--docs` entry
-  let filteredTags = filterTags(data[`${itemId}--docs`]?.tags);
+  let filteredTags = filterStatusTags(data[`${itemId}--docs`]?.tags);
 
   if (filteredTags.length === 0) {
     // Find the first entry matching the criteria
     const entry = Object.entries(data).find(([key, value]) =>
-      key.startsWith(`${itemId}--`) && filterTags(value.tags).length > 0
+      key.startsWith(`${itemId}--`) && filterStatusTags(value.tags).length > 0
     );
 
     // Filter tags for the found entry
     if (entry) {
-      filteredTags = filterTags(entry[1].tags);
+      filteredTags = filterStatusTags(entry[1].tags);
     }
   }
 
